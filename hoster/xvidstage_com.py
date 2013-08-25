@@ -70,8 +70,7 @@ def on_download_free(chunk):
     check_errors(file, resp)
     action, data = hoster.serialize_html_form(resp.soup.find_all("form")[-1])
     resp = chunk.account.post(chunk.url, data=data)
-    print resp.text
-    s = resp.soup.select('#player_code script')[0]
+    s = filter(lambda a: a.text.strip() != '', resp.soup.select('#player_code script'))[0]
     result = javascript.execute('''
         result = '';
         document = {};
