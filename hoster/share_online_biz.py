@@ -169,23 +169,25 @@ def on_initialize_account(self):
         "pass": self.password,
     }
     resp = self.post("https://www.share-online.biz/user/login", data=payload)
-    soup = BeautifulSoup(resp.text)
-    if soup.find("div", id="login_error"):
+    if resp.soup.find("div", id="login_error"):
         self.premium = False
         self.login_failed()
         return
-    details = soup.find("div", id="account_details")
+    details = resp.soup.find("div", id="account_details")
     try:
-        for n, v in zip(details.find_all("p", **{"class": "p_l"}), details.find_all("p", **{"class": "p_r"})):
-            if n.text.startswith("Your Account-Type"):
-                if v.text == "Premium":
+        for n in details.find_all("p", **{"class": "p_l"}):
+            if n.text.strip().startswith("Your Account-Type"):
+                v = n.find_next_sibling()
+                if v.text.strip() in ("Premium", "VIP"):
                     self.premium = True
                 else:
                     self.premium = False
                     return
-            elif n.text.startswith("Account valid until"):
-                self.expires = v.text
-            elif n.text.startswith("Bandwidth"):
+            elif n.text.strip().startswith("Account valid until"):
+                v = n.find_next_sibling()
+                self.expires = v.text.strip()
+            elif n.text.strip().startswith("Bandwidth"):
+                v = n.find_next_sibling()
                 self.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
     except AttributeError:
         print details
