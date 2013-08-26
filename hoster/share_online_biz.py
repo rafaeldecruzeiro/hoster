@@ -19,8 +19,6 @@ import re
 import time
 import requests
 
-from bs4 import BeautifulSoup
-
 from ... import hoster
 
 @hoster.host
@@ -158,20 +156,20 @@ def on_download_free(chunk):
     return start_download(chunk, url, True)
     
 
-def on_initialize_account(self):
-    self.set_user_agent()
-    self.cookies["page_language"] = "english"
-    if self.username is None:
+def on_initialize_account(account):
+    account.set_user_agent()
+    account.cookies["page_language"] = "english"
+    if account.username is None:
         return
     
     payload = {
-        "user": self.username,
-        "pass": self.password,
+        "user": account.username,
+        "pass": account.password,
     }
-    resp = self.post("https://www.share-online.biz/user/login", data=payload)
+    resp = account.post("https://www.share-online.biz/user/login", data=payload)
     if resp.soup.find("div", id="login_error"):
-        self.premium = False
-        self.login_failed()
+        account.premium = False
+        account.login_failed()
         return
     details = resp.soup.find("div", id="account_details")
     try:
@@ -179,16 +177,17 @@ def on_initialize_account(self):
             if n.text.strip().startswith("Your Account-Type"):
                 v = n.find_next_sibling()
                 if v.text.strip() in ("Premium", "VIP"):
-                    self.premium = True
+                    account.premium = True
                 else:
-                    self.premium = False
+                    account.premium = False
                     return
             elif n.text.strip().startswith("Account valid until"):
                 v = n.find_next_sibling()
-                self.expires = v.text.strip()
+                account.expires = v.text.strip()
             elif n.text.strip().startswith("Bandwidth"):
                 v = n.find_next_sibling()
-                self.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
+                account.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
     except AttributeError:
         print details
         raise
+    print account.serialize()
