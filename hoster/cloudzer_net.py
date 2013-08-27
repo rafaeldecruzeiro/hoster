@@ -20,6 +20,7 @@ import time
 import requests
 
 from ... import hoster, javascript
+from ...account import verify
 
 @hoster.host
 class this:
@@ -77,6 +78,10 @@ def on_download_premium(chunk, ignore_init_resume=False):
     return resp
 
 def on_download_free(chunk):
+    if verify:
+        agent = verify.get_agent("cloudzer.net")
+        print "setting agent", agent
+        chunk.account.set_user_agent(user_agent=agent)
     resp = chunk.account.get(chunk.file.url)
     
     refid = re.search(r'ref_user=(.*?)\&', resp.text)
