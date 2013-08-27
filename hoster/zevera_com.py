@@ -26,9 +26,8 @@ config.default('request_timeout', 30, int)
 
 @hoster.host
 class this:
-    model = hoster.MultiHttpPremiumHoster
-    name = 'zevera.com'
     model = hoster.MultiHttpHoster
+    name = 'zevera.com'
     max_chunks = 1
     can_resume = False
 
@@ -78,7 +77,7 @@ def get_download_response(file, exc):
 
     return resp
 
-def on_download(chunk):
+def on_download_premium(chunk):
     return get_download_response(chunk.file, chunk)
 
 

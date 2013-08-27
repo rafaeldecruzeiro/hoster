@@ -20,7 +20,7 @@ from ... import hoster
 @hoster.host
 class this:
     name = "real-debrid.com"
-    model = hoster.MultiHttpPremiumHoster
+    model = hoster.MultiHttpHoster
     favicon_url = 'https://cdn.real-debrid.com/0098/images/favicon.ico'
     
     can_resume = True
@@ -35,7 +35,7 @@ def on_check(file):
     error(data, file)
     file.set_infos(name=data["file_name"], size=int(data["file_size_bytes"]))
     
-def on_download(chunk):
+def on_download_premium(chunk):
     data = unrestrict(chunk.account, chunk.url)
     for i in xrange(5):
         error(data, chunk)
@@ -47,23 +47,33 @@ def on_download(chunk):
     chunk.no_download_link()
     
 
-def on_initialize_account(self):
-    if not self.username:
+def on_initialize_account(account):
+    print "real-debrid account init", account.username
+    if not account.username:
         return
-        
     payload = {
-        "user": self.username,
-        "pass": self.password,
+        "user": account.username,
+        "pass": account.password,
     }
-    resp = self.get("https://real-debrid.com/ajax/login.php", params=payload).json()
+    resp = account.get("https://real-debrid.com/ajax/login.php", params=payload).json()
     if not (resp["error"] == 0 and resp["message"] == "OK" and resp["captcha"] == 0):
-        self.premium = False
-        return self.login_failed()
+        print "real-debrid login failed:", resp
+        account.premium = False
+        return account.login_failed()
 
-    self.premium = True
-    resp = self.get("http://real-debrid.com/api/hosters.php")
-    self.set_compatible_hosts(re.findall('"(.*?)"', resp.text))
-    self._unrestricted = dict()
+    resp = account.get("http://real-debrid.com/lib/api/account.php")
+    
+    account.premium = resp.soup.find("type").text == u"premium"
+    if account.premium:
+        print "real-debrid premium set"
+        account.expires = resp.soup.find("expiration-txt").text
+    else:
+        print "real-debrid no premium account"
+        print resp.text
+        return
+    resp = account.get("http://real-debrid.com/api/hosters.php")
+    account.set_compatible_hosts(re.findall('"(.*?)"', resp.text))
+    account._unrestricted = dict()
 
 def unrestrict(account, url, clear=False):
     if clear:

@@ -14,14 +14,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from ... import hoster, account
+from ... import hoster
 
 # https://secure.premiumize.me/?show=api
 
 @hoster.host
 class this:
     name = "premiumize.me"
-    model = hoster.MultiHttpPremiumHoster
+    model = hoster.MultiHttpHoster
     can_resume = True
     max_chunks = 1
 
@@ -33,7 +33,7 @@ def on_check(file):
     name, size, file.can_resume = hoster.http_response(file, resp)
     file.set_infos(name=name, size=size)
 
-def on_download(chunk):
+def on_download_premium(chunk):
     result = api(chunk.account, "directdownloadlink", chunk, link=chunk.url)
     try:
         return result["location"]
@@ -64,17 +64,17 @@ def api(account, method, chunk=None, **data):
         chunk.retry(3*60)
     return result
     
-def on_initialize_account(self):
-    if not self.username:
+def on_initialize_account(account):
+    if not account.username:
         return
-    result = api(self, "accountstatus")
-    self.premium = result["type"] != "free"
-    self.expires = result["expires"]
-    self.traffic = int(result["fairuse_left"] * 100) # in percent
-    self.traffic_max = 100
-    hosterlist = api(self, "hosterlist")
+    result = api(account, "accountstatus")
+    account.premium = result["type"] != "free"
+    account.expires = result["expires"]
+    account.traffic = int(result["fairuse_left"] * 100) # in percent
+    account.traffic_max = 100
+    hosterlist = api(account, "hosterlist")
     tlds = set()
     for i in hosterlist["hosters"].itervalues():
         tlds |= set(i["tlds"])
-    self.set_compatible_hosts(list(tlds))
+    account.set_compatible_hosts(list(tlds))
     
