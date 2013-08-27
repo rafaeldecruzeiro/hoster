@@ -38,6 +38,8 @@ class this:
     max_filesize_free = sizetools.GB(1)
     max_filesize_premium = sizetools.GB(2)
 
+    max_chunks_premium = 1
+
     has_captcha_free = True
     max_download_speed_free = 100
     waiting_time_free = 1
