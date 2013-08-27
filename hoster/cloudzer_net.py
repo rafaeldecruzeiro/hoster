@@ -82,7 +82,11 @@ def on_download_free(chunk):
         agent = verify.get_agent("cloudzer.net")
         print "setting agent", agent
         chunk.account.set_user_agent(user_agent=agent)
-    resp = chunk.account.get(chunk.file.url)
+    
+    resp = chunk.account.get(chunk.file.url, allow_redirects=False)
+    if resp.status_code == 302:
+        return resp.headers["Location"]
+    resp.raise_for_status()
     
     refid = re.search(r'ref_user=(.*?)\&', resp.text)
     if refid:

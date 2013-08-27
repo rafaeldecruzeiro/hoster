@@ -95,7 +95,10 @@ def on_download_free(chunk):
     if verify:
         agent = verify.get_agent("uploaded.net")
         chunk.account.set_user_agent(user_agent=agent)
-    resp = chunk.account.get(chunk.file.url)
+    resp = chunk.account.get(chunk.file.url, allow_redirects=False)
+    if resp.status_code == 302:
+        return resp.headers["Location"]
+    resp.raise_for_status()
     refid = re.search(r'ref_user=(.*?)\&', resp.text)
     if refid:
         chunk.account.set_buy_url("http://ul.to/ref/"+refid.group(1))
