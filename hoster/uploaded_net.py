@@ -21,10 +21,7 @@ import time
 from ... import javascript
 from ...hoster import host, HttpPremiumHoster, Matcher, sizetools
 from ...core import add_links
-try:
-    from ...account import verify
-except ImportError: # xxx remove when in stable
-    verify = None
+from ...account import verify
 
 @host
 class this:
@@ -99,7 +96,6 @@ def on_download_premium(chunk, ignore_init_resume=False):
 def on_download_free(chunk):
     if verify:
         agent = verify.get_agent("uploaded.net")
-        print "agent is", agent
         chunk.account.set_user_agent(user_agent=agent)
     resp = chunk.account.get(chunk.file.url)
     refid = re.search(r'ref_user=(.*?)\&', resp.text)
