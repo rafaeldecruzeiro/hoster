@@ -19,8 +19,6 @@ import re
 import time
 import requests
 
-from bs4 import BeautifulSoup
-
 from ... import hoster
 
 @hoster.host
@@ -158,35 +156,38 @@ def on_download_free(chunk):
     return start_download(chunk, url, True)
     
 
-def on_initialize_account(self):
-    self.set_user_agent()
-    self.cookies["page_language"] = "english"
-    if self.username is None:
+def on_initialize_account(account):
+    account.set_user_agent()
+    account.cookies["page_language"] = "english"
+    if account.username is None:
         return
     
     payload = {
-        "user": self.username,
-        "pass": self.password,
+        "user": account.username,
+        "pass": account.password,
     }
-    resp = self.post("https://www.share-online.biz/user/login", data=payload)
-    soup = BeautifulSoup(resp.text)
-    if soup.find("div", id="login_error"):
-        self.premium = False
-        self.login_failed()
+    resp = account.post("https://www.share-online.biz/user/login", data=payload)
+    if resp.soup.find("div", id="login_error"):
+        account.premium = False
+        account.login_failed()
         return
-    details = soup.find("div", id="account_details")
+    details = resp.soup.find("div", id="account_details")
     try:
-        for n, v in zip(details.find_all("p", **{"class": "p_l"}), details.find_all("p", **{"class": "p_r"})):
-            if n.text.startswith("Your Account-Type"):
-                if v.text == "Premium":
-                    self.premium = True
+        for n in details.find_all("p", **{"class": "p_l"}):
+            if n.text.strip().startswith("Your Account-Type"):
+                v = n.find_next_sibling()
+                if v.text.strip() in ("Premium", "VIP"):
+                    account.premium = True
                 else:
-                    self.premium = False
+                    account.premium = False
                     return
-            elif n.text.startswith("Account valid until"):
-                self.expires = v.text
-            elif n.text.startswith("Bandwidth"):
-                self.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
+            elif n.text.strip().startswith("Account valid until"):
+                v = n.find_next_sibling()
+                account.expires = v.text.strip()
+            elif n.text.strip().startswith("Bandwidth"):
+                v = n.find_next_sibling()
+                account.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
     except AttributeError:
         print details
         raise
+    print account.serialize()
