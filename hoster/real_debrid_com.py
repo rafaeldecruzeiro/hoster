@@ -36,16 +36,7 @@ def on_check(file):
     file.set_infos(name=data["file_name"], size=int(data["file_size_bytes"]))
     
 def on_download_premium(chunk):
-    data = unrestrict(chunk.account, chunk.url)
-    for i in xrange(5):
-        error(data, chunk)
-        resp = chunk.account.get(data["main_link"], chunk=chunk, stream=True)
-        if not resp.ok:
-            data = unrestrict(chunk.account, chunk.url, True)
-        else:
-            return resp
-    chunk.no_download_link()
-    
+    return chunk.file.url
 
 def on_initialize_account(account):
     print "real-debrid account init", account.username
