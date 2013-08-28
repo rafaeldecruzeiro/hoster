@@ -96,6 +96,7 @@ def on_download_premium(chunk, ignore_init_resume=False):
 def on_download_free(chunk):
     if verify:
         agent = verify.get_agent("uploaded.net")
+        print "setting agent", agent
         chunk.account.set_user_agent(user_agent=agent)
     resp = chunk.account.get(chunk.file.url, allow_redirects=False)
     if resp.status_code == 302:
