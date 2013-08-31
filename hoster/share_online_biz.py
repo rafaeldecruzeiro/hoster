@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import re
 import time
 import requests
+import dateutil.parser
 
 from ... import hoster
 
@@ -176,14 +177,14 @@ def on_initialize_account(account):
         for n in details.find_all("p", **{"class": "p_l"}):
             if n.text.strip().startswith("Your Account-Type"):
                 v = n.find_next_sibling()
-                if v.text.strip() in ("Premium", "VIP"):
+                if v.text.strip().lower() in {u"premium", u"vip"}:
                     account.premium = True
                 else:
                     account.premium = False
                     return
             elif n.text.strip().startswith("Account valid until"):
                 v = n.find_next_sibling()
-                account.expires = v.text.strip()
+                account.expires = time.mktime(dateutil.parser.parse(v.text.strip(), dayfirst=True).timetuple())
             elif n.text.strip().startswith("Bandwidth"):
                 v = n.find_next_sibling()
                 account.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily

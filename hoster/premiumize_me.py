@@ -29,7 +29,7 @@ def on_check(file):
     result = api(file.account, "directdownloadlink", file, link=file.url)
     if result["filename"] and result["filesize"]:
         return file.set_infos(name=result["filename"], size=result["filesize"])
-    hoster.check_download_url(file, result["location"])
+    hoster.check_download_url(file, result["location"], name=result.get("filename", None))
     
 def on_download_premium(chunk):
     result = api(chunk.account, "directdownloadlink", chunk, link=chunk.url)
