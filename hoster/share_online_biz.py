@@ -95,7 +95,6 @@ def on_download_premium(chunk):
         chunk.account.cookies["dl"] = data["dl"]
     except KeyError:
         pass
-        
     try:
         data = account_request(chunk, lid=True)
     except ValueError:
@@ -173,6 +172,9 @@ def on_initialize_account(account):
         account.login_failed()
         return
     details = resp.soup.find("div", id="account_details")
+    if not details:
+        account.login_failed()
+        return
     try:
         for n in details.find_all("p", **{"class": "p_l"}):
             if n.text.strip().startswith("Your Account-Type"):
@@ -182,12 +184,12 @@ def on_initialize_account(account):
                 else:
                     account.premium = False
                     return
-            elif n.text.strip().startswith("Account valid until"):
-                v = n.find_next_sibling()
-                account.expires = time.mktime(dateutil.parser.parse(v.text.strip(), dayfirst=True).timetuple())
-            elif n.text.strip().startswith("Bandwidth"):
-                v = n.find_next_sibling()
-                account.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
+            #elif n.text.strip().startswith("Account valid until"):
+                #v = n.find_next_sibling()
+                #account.expires = time.mktime(dateutil.parser.parse(v.text.strip(), dayfirst=True).timetuple())
+            #elif n.text.strip().startswith("Bandwidth"):
+            #    v = n.find_next_sibling()
+            #    account.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
     except AttributeError:
         print details
         raise
