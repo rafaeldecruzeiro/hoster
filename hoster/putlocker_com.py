@@ -35,3 +35,4 @@ class this:
     favicon_url = "http://www.putlocker.com/putlocker.ico"
 
     has_captcha_free = False
+    can_resume_free = True

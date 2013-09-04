@@ -26,6 +26,7 @@ class this:
     patterns = [
         hoster.Matcher('https?', '*.xvidstage.com', '!/<id>'),
     ]
+    can_resume_free = True
     max_filesize_free = hoster.GB(2)
     max_filesize_premium = hoster.GB(2)
 
