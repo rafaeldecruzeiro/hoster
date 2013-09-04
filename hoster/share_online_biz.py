@@ -18,7 +18,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import re
 import time
 import requests
-import dateutil.parser
 
 from ... import hoster
 
@@ -53,26 +52,17 @@ def on_check(file):
         file.set_infos(name=fields[2], size=int(fields[3]), hash_type='md5', hash_value=fields[4].strip().lower())
     except requests.HTTPError:
         raise
-
-def account_request(ctx, act="userDetails", lid=False):
-    payload = {
-        "username": ctx.account.username,
-        "password": ctx.account.password,
-        "act": act,
-    }
-    if lid:
-        payload["act"] = "download"
-        payload["lid"] = ctx.pmatch.id
         
-    resp = ctx.account.get("https://api.share-online.biz/account.php", params=payload)
+def api(account, **kwargs):
+    payload = {
+        "username": account.username,
+        "password": account.password
+    }
+    payload.update(kwargs)
+    return account.get("https://api.share-online.biz/account.php", params=payload)
     
-    try:
-        #print repr(resp.content)
-        data = dict(re.split(r"=|:\ ?", i, 1) for i in resp.content.splitlines() if i.strip())
-    except ValueError:
-        ctx.fatal(resp.content)
-    print data
-    return data
+def parse(resp):
+    return dict(re.split(r"=|:\ ?", i, 1) for i in resp.content.splitlines() if i.strip())
     
 def start_download(chunk, url, f=True):
     resp = chunk.account.get(url, stream=True, chunk=chunk, allow_redirects=False)
@@ -86,19 +76,11 @@ def start_download(chunk, url, f=True):
         return resp
         
 def on_download_premium(chunk):
-    data = account_request(chunk)
+    resp = api(chunk.account, act="download", lid=chunk.pmatch.id)
     try:
-        chunk.account.cookies["a"] = data["a"]
-    except KeyError:
-        chunk.premium_needed()
-    try:
-        chunk.account.cookies["dl"] = data["dl"]
-    except KeyError:
-        pass
-    try:
-        data = account_request(chunk, lid=True)
+        data = parse(resp)
     except ValueError:
-        chunk.fatal(data)
+        chunk.fatal(resp.content)
     else:
         if data["STATUS"] != "online":
             chunk.retry("file not online: {}".format(data["STATUS"]), 180)
@@ -154,43 +136,38 @@ def on_download_free(chunk):
         chunk.no_download_link()
     chunk.wait(31)
     return start_download(chunk, url, True)
-    
 
 def on_initialize_account(account):
     account.set_user_agent()
     account.cookies["page_language"] = "english"
     if account.username is None:
         return
-    
-    payload = {
-        "user": account.username,
-        "pass": account.password,
-    }
-    resp = account.post("https://www.share-online.biz/user/login", data=payload)
-    if resp.soup.find("div", id="login_error"):
-        account.premium = False
-        account.login_failed()
-        return
-    details = resp.soup.find("div", id="account_details")
-    if not details:
-        account.login_failed()
-        return
+        
+    resp = api(account, act="userDetails")
+    if "INVALID USER DATA" in resp.content:
+        return account.login_failed()
     try:
-        for n in details.find_all("p", **{"class": "p_l"}):
-            if n.text.strip().startswith("Your Account-Type"):
-                v = n.find_next_sibling()
-                if v.text.strip().lower() in {u"premium", u"vip"}:
-                    account.premium = True
-                else:
-                    account.premium = False
-                    return
-            #elif n.text.strip().startswith("Account valid until"):
-                #v = n.find_next_sibling()
-                #account.expires = time.mktime(dateutil.parser.parse(v.text.strip(), dayfirst=True).timetuple())
-            #elif n.text.strip().startswith("Bandwidth"):
-            #    v = n.find_next_sibling()
-            #    account.traffic = 110*float(v.find("img")["title"].split(u"%")[0])/100*1024*1024*1024 # they use 110gb daily limit, show daily
-    except AttributeError:
-        print details
-        raise
-    print account.serialize()
+        data = parse(resp)
+    except ValueError:
+        return account.fatal(resp.content)
+    else:
+        print data
+    try:
+        account.cookies["a"] = data["a"]
+        account.cookies["dl"] = data["dl"]
+    except KeyError:
+        pass
+    ptext = data["group"].lower()
+    if ptext in {u"premium", u"vip"} or "vip" in ptext:
+        account.premium = True
+        print "premium", True
+        try:
+            expire = int(data['expire_date'])
+        except ValueError:
+            pass
+        else:
+            if expire > time.time():
+                account.expires = expire
+            else:
+                print "expire in future??"
+        print account.serialize()
