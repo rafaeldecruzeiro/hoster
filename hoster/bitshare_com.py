@@ -90,7 +90,7 @@ def on_download_free(chunk):
     check_errors(chunk, resp.text)
 
     v = resp.cookies["PHPSESSID"]
-    del chunk.account.cookies["PHPSESSID"] # 'set-cookie': 'PHPSESSID=1jlb09b9gkg6oaoj8ih9h8k7s2; path=/', 'expires': 'Thu, 19 Nov 1981 08:52:00 GMT' srsly?
+    del chunk.account.cookies["PHPSESSID"] # 'set-cookie': 'PHPSESSID=1jlb09b9gkg6oaoj8ih9h8k7s2; path=/', 'expires': 'Thu, 19 Nov 1981 08:52:00 GMT'
     chunk.account.cookies["PHPSESSID"] = v
 
     ajax_id = re.search(r'var ajaxdl = "(.*?)";', resp.text).group(1)
@@ -101,7 +101,7 @@ def on_download_free(chunk):
     check_ajax_errors(chunk, r.text)
 
     parts = r.text.split(":")
-    #filetype = parts[0]
+    filetype = parts[0]
     wait = int(parts[1])
     captcha = int(parts[2])
 
@@ -116,6 +116,12 @@ def on_download_free(chunk):
                 break
             check_errors(chunk, r.text)
             check_ajax_errors(chunk, r.text)
+    
+    if filetype == "mp4":
+        url = re.search(r"http\://.*\.bitshare\.com/stream/.*?'", resp.content).group(0).strip("'")
+        resp = chunk.account.get(url, chunk=chunk, stream=True)
+        chunk.file.set_infos(size=int(resp.headers['Content-Length']))
+        return resp
 
     data = {"request": "getDownloadURL", "ajaxid": ajax_id}
     r = chunk.account.post("http://bitshare.com/files-ajax/{}/request.html".format(chunk.pmatch.id), data=data)
