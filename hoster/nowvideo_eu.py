@@ -30,6 +30,7 @@ class this:
         hoster.Matcher('https?', '~(.*\.)?nowvideo.(eu|ch|at|co)', '!/mobile', id="id")
     ]
     url_template = 'http://www.nowvideo.eu/video/{id}'
+    can_resume_free = True
 
 def on_initialize_account(account):
     account.set_user_agent(os='ipad')

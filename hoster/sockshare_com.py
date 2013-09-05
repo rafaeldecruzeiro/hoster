@@ -18,7 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import os
 import re
 
-from ... import hoster, core
+from ... import hoster
 from bs4 import BeautifulSoup
 
 @hoster.host
@@ -38,6 +38,7 @@ class this:
     favicon_url = "http://www.sockshare.com/sockshare.ico"
 
     has_captcha_free = False
+    can_resume_free = True
 
 def get_original_url(chunk, resp):
     url = re.search(r'<a href="(/get_file\.php\?id=[^"]+)', resp.text)

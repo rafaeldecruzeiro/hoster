@@ -29,3 +29,4 @@ class this:
 
     ]
     url_template = 'http://www.divxstage.eu/video/{id}'
+    can_resume_free = True

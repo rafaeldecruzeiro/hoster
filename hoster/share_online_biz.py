@@ -170,4 +170,3 @@ def on_initialize_account(account):
                 account.expires = expire
             else:
                 print "expire in future??"
-        print account.serialize()
