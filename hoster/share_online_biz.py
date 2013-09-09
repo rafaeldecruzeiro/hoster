@@ -159,6 +159,9 @@ def on_initialize_account(account):
         pass
     ptext = data["group"].lower()
     if ptext in {u"premium", u"vip"} or "vip" in ptext:
+        if 'vip' in ptext:
+            account.max_download_tasks = 2
+            account.max_chunks = 3
         account.premium = True
         print "premium", True
         try:
