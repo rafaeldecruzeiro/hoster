@@ -42,13 +42,24 @@ def check_errors(ctx, resp):
 
 def get_download_url(ctx, resp):
     url = resp.soup.find('iframe', src=lambda e: e.startswith('http://play.flashx.tv/')).get('src')
-    resp = ctx.account.get(url, referer=resp.url)
-    url = resp.soup.find('a', href=lambda e: e.startswith('http://play.flashx.tv/player/fxtv.php?')).get('href')
-    resp = ctx.account.get(url, referer=resp.url)
+    resp = resp.get(url)
+
+    try:
+        url = resp.soup.find('a', href=lambda e: e.startswith('http://play.flashx.tv/player/fxtv.php?')).get('href')
+    except AttributeError:
+        form = resp.soup.find('form', action='view.php')
+        action, data = hoster.serialize_html_form(form)
+        resp = resp.post(action, data=data)
+    else:
+        resp = resp.get(url)
     check_errors(ctx, resp)
-    ctx.account.get('http://play.flashx.tv/player/soy.php', referer=resp.url)
-    url = re.search('config=(http://play.flashx.tv/nuevo/player/fx(ng|config)?.php\?str=[^"]+)', resp.content).group(1)
-    resp = ctx.account.get(url, referer=resp.url)
+
+    #ctx.account.get('http://play.flashx.tv/player/soy.php', referer=resp.url)
+    m = re.search('"(http.*?config=(http://play.flashx.tv/nuevo/player/(config)?fx(ng|config)?.php\?str=[^"]+))', resp.content)
+    url = m.group(1)
+    config_url = m.group(2)
+    resp = resp.get(url)
+    resp = resp.get(config_url)
     return resp.soup.find('file').text.strip()
 
 def on_check_http(file, resp):
