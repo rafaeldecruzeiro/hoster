@@ -40,8 +40,8 @@ def on_check(file):
     status = int(status)
     size = int(size)
 
-    if not status in (1, 2):
-        file.set_offline('file is offline')
+    if status not in (1, 2):
+        file.set_offline()
 
     file.set_infos(name=name, size=size, hash_type='sha1', hash_value=sha1)
 

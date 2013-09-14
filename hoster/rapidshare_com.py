@@ -101,7 +101,7 @@ def check_file(file, exc):
     data['md5'] = data['md5'].lower()
 
     if data['status'] in (0, 4, 5):
-        exc.set_offline('file is offline')
+        exc.set_offline()
     elif data['status'] == 3:
         exc.temporary_unavailable(90)
     elif not data['status'] in (1, 2):

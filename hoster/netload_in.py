@@ -52,7 +52,7 @@ def on_check(file):
             file.retry('website error', 2)
         raise
     if status == "offline":
-        file.set_offline('file is offline')
+        file.set_offline()
     file.set_infos(name=filename, size=int(filesize), hash_type='md5', hash_value=md5)
     
 def _get_status(chunk, **kwargs):

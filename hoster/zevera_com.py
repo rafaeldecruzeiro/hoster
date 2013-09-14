@@ -39,7 +39,7 @@ def delete_request_cache(file_id):
 
 def on_check(file):
     if call_api(file.account, str, cmd='checklink', olink=file.url, login=file.account.username, password=file.account.password) != 'Alive':
-        file.set_offline('file is offline')
+        file.set_offline()
 
     resp = get_download_response(file, file)
     request_cache[file.id] = resp

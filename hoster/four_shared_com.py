@@ -32,7 +32,7 @@ def on_check(file):
     resp = file.account.get(file.url)
 
     if re.search(r'The file link that you requested is not valid\.|This file was deleted\.', resp.text):
-        file.set_offline('file is offline')
+        file.set_offline()
 
     m = re.search(r'<meta name="title" content="(.+?)"', resp.text)
     if not m:
