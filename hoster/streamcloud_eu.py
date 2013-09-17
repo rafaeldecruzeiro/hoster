@@ -18,6 +18,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import os
 import re
 
+from gevent.lock import Semaphore
+
 from ... import hoster
 from bs4 import BeautifulSoup
 
@@ -30,7 +32,7 @@ class this:
     patterns = [
         hoster.Matcher('https?', '*.streamcloud.eu', '!/<id>'),
     ]
-    url_template = 'http://streamcloud.eu/{id}'
+    url_template =  'http://streamcloud.eu/{id}'
 
     has_captcha = False
     max_download_speed = 100
@@ -40,6 +42,8 @@ def set_name(file, data):
     name, ext = os.path.splitext(data['fname'])
     name += '.mp4'
     file.set_infos(name=name)
+
+lock = Semaphore()
 
 def get_url(file):
     resp = file.account.get(file.url)

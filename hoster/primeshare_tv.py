@@ -25,8 +25,7 @@ class this:
         hoster.Matcher('https?', ['*.primeshare.tv'], '!/download/<id>'),
     ]
     favicon_url = "http://static.primeshare.tv/images/favicon.ico"
-    can_resume = True
-    max_chunks = 2
+    can_resume_free = True
 
 def on_initialize_account(self):
     self.set_user_agent('ipad')

@@ -123,7 +123,7 @@ def on_download_free(chunk):
             elif 'This file exceeds the max. filesize which can be downloaded' in data['err']:
                 chunk.no_more_free_traffic()
             elif data['err'] == u'limit-dl' or data['err'].startswith(u"You have reached the max. number of possible free downloads for this hour"):
-                chunk.account.no_free_traffic(3*3600, need_reconnect=True)
+                chunk.account.no_free_traffic(3600, need_reconnect=True)
             else:
                 chunk.plugin_out_of_date(msg='unknown captcha error: {}'.format(data['err']), seconds=1800)
         elif u'type' in data and data['type'] == u'download':

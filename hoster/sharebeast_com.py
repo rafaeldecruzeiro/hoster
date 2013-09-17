@@ -16,6 +16,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from ... import hoster
+from PIL import JpegImagePlugin
 
 @hoster.host
 class this:
@@ -82,12 +83,11 @@ def on_check_http(file, resp):
 def on_download_free(chunk, retry=1):
     resp = chunk.account.get(chunk.url, use_cache=True)
     check_errors(chunk, resp, chunk.file.name)
-    submit, data = hoster.xfilesharing_download(resp, 2)
-
+    form = resp.soup.find('form', attrs=dict(name='F1'))
+    action, data = hoster.serialize_html_form(form)
     if 'password' in data:
         data['password'] = chunk.solve_password(retries=1).next()
-
-    resp = submit(allow_redirects=False)
+    resp = chunk.account.post(chunk.url, data=data, allow_redirects=False)
     if 'Location' not in resp.headers:
         error = resp.soup.find('p', 'err')
         if error:

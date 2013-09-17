@@ -92,7 +92,7 @@ def on_check_http(file, resp):
             url = hoster.add_extra(file.url, type)
             path = hoster.Url(src).path
             ext = os.path.splitext(path)[1] or '.flv'
-            links.append(dict(url=url, name=name+ext, package_name=file.package.name))
+            links.append(dict(url=url, name=name+ext))
         return links
     if file.extra == 'a':
         url = resp.soup.select('h3 a')[0].get('href')

@@ -81,19 +81,26 @@ def on_download_premium(chunk):
 
 def on_download_free(chunk):
     resp = chunk.account.get(chunk.url, use_cache=True)
-    check_errors(chunk, resp)
-    resp = hoster.xfilesharing_download(resp, 1)[0]()
+    action, data = hoster.serialize_html_form(resp.soup.find_all("form")[-1])
+    del data['method_premium']
+    resp = resp.post(action, data=data)
     check_errors(chunk, resp)
 
     m = re.search('You have to wait (.*?) till next download', resp.text)
     if m:
-        wait = hoster.parse_seconds2(m.group(1)) + time.time()
+        wait = 0
+        t = dict(hours=3600, minutes=60, seconds=1)
+        for x in m.group(1).split(', '):
+            x = x.split(' ', 1)
+            wait += int(x[0])*t[x[1].strip()]
         if wait > 300:
             chunk.ip_blocked(wait)
+        chunk.wait(wait)
 
-    submit, data = hoster.xfilesharing_download(resp, 2)
+    form = resp.soup.find('form', attrs={'name': 'F1'})
+    action, data = hoster.serialize_html_form(form)
 
-    wait = resp.soup.find('span', id='uglrto')
+    wait = form.find('span', id='uglrto')
     if wait:
         wait = int(wait.text.strip().rplit(' ', 1)[1]) + time.time()
 
@@ -102,7 +109,8 @@ def on_download_free(chunk):
         data['recaptcha_response_field'] = result
         if wait and wait - time.time() > 0:
             chunk.wait(wait - time.time())
-        resp = submit(allow_redirects=False)
+        resp = resp.post(action, data, allow_redirects=False)
         if resp.status_code == 302:
             return resp.headers['Location']
+        # check errors
         check_errors(chunk, resp)
