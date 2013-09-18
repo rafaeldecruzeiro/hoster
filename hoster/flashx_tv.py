@@ -26,6 +26,8 @@ class this:
         hoster.Matcher('https?', '*.flashx.tv', '!/video/<id>/')
     ]
     url_template = 'http://flashx.tv/video/{id}/'
+    can_resume = True
+    max_chunks = 2
 
 def check_errors(ctx, resp):
     error = resp.soup.find('div', 'cb_error')

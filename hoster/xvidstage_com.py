@@ -56,21 +56,10 @@ def on_check_http(file, resp):
         size = between(content.find("font").text, "(", ")").strip()
         file.set_infos(name=name, approx_size=size)
 
-def on_download_premium(chunk):
-    raise NotImplementedError('premium is untested')
-    resp = chunk.account.get(chunk.url, allow_redirect=False)
-    if "Location" in resp.headers:
-        return resp.headers["Location"]
-    _, payload = hoster.serialize_html_form(resp.soup.find(attrs={"name": "F1"}))
-    payload["down_direct"] = 1
-    resp = chunk.account.post(chunk.url, data=payload)
-    return resp.soup.find("div", attrs={"id": "content"}).find("a")["href"]
-
 def on_download_free(chunk):
     resp = chunk.account.get(chunk.url, use_cache=True)
     check_errors(file, resp)
-    action, data = hoster.serialize_html_form(resp.soup.find_all("form")[-1])
-    resp = chunk.account.post(chunk.url, data=data)
+    resp = hoster.xfilesharing_download(resp, 1)[0]()
     s = filter(lambda a: a.text.strip() != '', resp.soup.select('#player_code script'))[0]
     result = javascript.execute('''
         result = '';
