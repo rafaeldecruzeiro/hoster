@@ -19,7 +19,7 @@ import re
 import time
 
 from ... import javascript
-from ...hoster import host, HttpPremiumHoster, Matcher, sizetools
+from ...hoster import host, HttpPremiumHoster, Matcher, sizetools, serialize_html_form
 from ...core import add_links
 from ...account import verify
 
@@ -109,11 +109,20 @@ def on_download_free(chunk):
     if 'var free_enabled = false;' in resp.text:
         chunk.account.no_more_free_traffic(300, need_reconnect=True)
 
-    found = re.search(r"Current waiting period: <span>(\d+)</span> seconds", resp.text)
-    if not found:
+    form = resp.soup.find('h2', text=lambda a: 'Authentification' in a)
+    if form:
+        form = form.find_parent('form')
+        action, data = serialize_html_form(form)
+        data['pw'] = chunk.solve_password_www(retries=1).next()
+        resp = resp.post(action, data=data)
+        if resp.soup.find('h2', text=lambda a: 'Authentification' in a):
+            chunk.password_invalid()
+
+    m = re.search(r"Current waiting period: <span>(\d+)</span> seconds", resp.text)
+    if not m:
         chunk.premium_needed()
 
-    chunk.wait(int(found.group(1)))
+    chunk.wait(int(m.group(1)))
 
     js = chunk.account.get('http://uploaded.net/js/download.js')
 
@@ -133,7 +142,7 @@ def on_download_free(chunk):
             if data['err'] == u'captcha':
                 chunk.log.info('invalid captcha')
             elif data['err'] == u'limit-dl' or data['err'].startswith(u"You have reached the max. number of possible free downloads for this hour"):
-                chunk.account.no_free_traffic(3600, need_reconnect=True)
+                chunk.account.no_free_traffic(3*3600, need_reconnect=True)
             else:
                 chunk.plugin_out_of_date(msg='unknown captcha error', seconds=1800)
         elif u'type' in data and data['type'] == u'download':
