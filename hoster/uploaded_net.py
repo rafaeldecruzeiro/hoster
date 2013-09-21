@@ -28,6 +28,7 @@ class this:
     model = HttpPremiumHoster
     name = 'uploaded.net'
     patterns = [
+        Matcher('https?', '*.ul.to', '!/f/<id>').set_tag("file").set_tag("folder"),
         Matcher('https?', '*.ul.to', '!/<id>').set_tag("file"),
         Matcher('https?', ['*.uploaded.to', '*.uploaded.net'], '!/file/<id>').set_tag("file"),
         Matcher('https?', ['*.uploaded.to', '*.uploaded.net'], id='id').set_tag("file"),
