@@ -27,7 +27,7 @@ class this:
     name = 'ryushare.com'
     uses = 'junocloud.me'
     patterns = [
-        hoster.Matcher('https?', ['*.ryushare.com'], '!/<id>/<name>'),
+        hoster.Matcher('https?', ['*.ryushare.com'], '!/<id>'),
     ]
     max_filesize_free = hoster.GB(2)
     max_filesize_premium = hoster.GB(2)
@@ -47,7 +47,7 @@ def check_errors(ctx, resp):
 
 def on_check_http(file, resp):
     check_errors(file, resp)
-    file.set_infos(name=file.pmatch.name)
+    #file.set_infos(name=file.pmatch.name)
     content = resp.soup.find("div", attrs={"id": "content"})
     if file.account.premium:
         t = content.find("table", attrs={"class": "file_slot"})
@@ -105,7 +105,11 @@ def on_download_free(chunk):
         resp = ctx['submit']()
         if '<div class="err">WRONG CAPTCHA</div>' in resp.text:
             continue
-        return resp.soup.find('a', href=lambda a: 'free' in a, text=lambda a: a == 'Click here to download').get('href')
+        try:
+            return resp.soup.find('a', href=lambda a: a and 'free' in a, text=lambda a: a == 'Click here to download').get('href')
+        except:
+            print resp.text
+            raise
 
 def on_initialize_account(account):
     resp = this.boot_account(account)
