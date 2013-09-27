@@ -66,8 +66,7 @@ def on_initialize_account(account):
     
     account.premium = resp.soup.find("type").text == u"premium"
     if account.premium:
-        print "real-debrid premium set"
-        account.expires = resp.soup.find("expiration-txt").text
+        account.expires = int(resp.soup.find("expiration").text)
     else:
         print "real-debrid no premium account"
         print resp.text
@@ -84,5 +83,3 @@ def unrestrict(account, url, clear=False):
     except KeyError:#
         v = account._unrestricted[url] = account.get("https://real-debrid.com/ajax/unrestrict.php?link="+url).json()
         return v
-
-#http://www.real-debrid.com/api/regex.php?type=all incorporate somehow?
