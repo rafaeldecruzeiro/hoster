@@ -18,7 +18,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import re
 import time
 
-from ... import hoster, account
+from ... import hoster
+
 
 @hoster.host
 class this:
@@ -33,10 +34,14 @@ class this:
     max_filesize_free = hoster.MB(500)
     max_filesize_premium = hoster.GB(2)
 
+extra_persistent_account_columns = ['sid']
+
+
 def on_check(file):
     resp = file.account.get(file.url)
     name, size = get_file_infos(file, resp.text)
     file.set_infos(name=name, approx_size=size)
+
 
 def get_file_infos(file, text):
     if "File not found" in text or 'Error 404' in text:
@@ -58,8 +63,9 @@ def get_file_infos(file, text):
 
     return name, size
 
+
 def call_api(chunk, cmd):
-    params = {'sid': account.sid, 'url': chunk.file.url}
+    params = {'sid': chunk.account.sid, 'url': chunk.file.url}
     resp = chunk.account.get('http://rapidgator.net/api/file/{}'.format(cmd), params=params)
     json = resp.json()
     status = json['response_status']
@@ -74,10 +80,12 @@ def call_api(chunk, cmd):
         chunk.account.reboot()
         chunk.retry(msg, 60)
 
+
 def on_download_premium(chunk):
     data = call_api(chunk, 'info')
     chunk.file.set_infos(name=data['filename'], size=int(data['size']), hash_type='md5', hash_value=data['hash'])
     return call_api(chunk, 'download')['url']
+
 
 def on_download_free(chunk):
     resp = chunk.account.get(chunk.file.url)
@@ -143,6 +151,7 @@ def on_download_free(chunk):
 
     return m.group(1)
 
+
 def check_wait(file, text):
     wait = re.search(r"(?:Delay between downloads must be not less than|Try again in)\s*(\d+)\s*(hour|min)", text)
     if wait:
@@ -156,6 +165,7 @@ def check_wait(file, text):
     wait = re.search(r"You have reached your (daily|hourly) downloads limit", text)
     if wait:
         file.ip_blocked(3600)
+
 
 def on_initialize_account(account):
     account.sid = None
