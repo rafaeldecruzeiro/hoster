@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 import re
 from ... import hoster
 
+
 @hoster.host
 class this:
     name = "real-debrid.com"
@@ -26,15 +27,18 @@ class this:
     can_resume = True
     max_chunks = 1
     
+
 def error(data, file):
     if data["error"] != 0:
         file.fatal(data.get("message", "Unknown error").encode("utf8"))
+
 
 def on_check(file):
     data = unrestrict(file.account, file.url)
     error(data, file)
     file.set_infos(name=data["file_name"], size=int(data["file_size_bytes"]))
     
+
 def on_download_premium(chunk):
     data = unrestrict(chunk.account, chunk.url)
     print data
@@ -47,6 +51,7 @@ def on_download_premium(chunk):
         return data['main_link']
     except KeyError:
         chunk.no_download_link()
+
 
 def on_initialize_account(account):
     print "real-debrid account init", account.username
@@ -75,11 +80,12 @@ def on_initialize_account(account):
     account.set_compatible_hosts(re.findall('"(.*?)"', resp.text))
     account._unrestricted = dict()
 
+
 def unrestrict(account, url, clear=False):
     if clear:
         del account._unrestricted[url]
     try:
         return account._unrestricted[url]
-    except KeyError:#
+    except KeyError:
         v = account._unrestricted[url] = account.get("https://real-debrid.com/ajax/unrestrict.php?link="+url).json()
         return v

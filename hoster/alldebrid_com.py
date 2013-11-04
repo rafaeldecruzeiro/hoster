@@ -15,8 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import re, time, urlparse
+import re
+import time
+import urlparse
+
 from ... import hoster
+
 
 @hoster.host
 class this:
@@ -27,6 +31,7 @@ class this:
     can_resume = True
     max_chunks = 1
 
+
 def on_check(file):
     link = unrestrict(file, file.url)
     name = None
@@ -35,13 +40,16 @@ def on_check(file):
     except IndexError:
         pass
     hoster.check_download_url(file, link, name=name)
+
     
 def on_download_premium(chunk):
     return unrestrict(chunk.file, chunk.url)
 
+
 def api(account, action, **kwargs):
     kwargs["action"] = action
     return account.get("http://www.alldebrid.com/api.php", params=kwargs)
+
 
 def on_initialize_account(account):
     if not account.username:
@@ -62,6 +70,7 @@ def on_initialize_account(account):
     resp = api(account, "get_host")
     account.set_compatible_hosts(re.findall('"(.*?)"', resp.text))
     account._unrestricted = dict()
+
 
 def unrestrict(file, url, clear=False):
     account = file.account

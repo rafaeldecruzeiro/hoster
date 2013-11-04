@@ -25,7 +25,7 @@ class this:
     model = hoster.HttpPremiumHoster
     name = 'dfiles.eu'
     alias = ['depositfiles.com']
-    favicon_url = 'http://static302.dfiles.eu/images/favicon.ico'
+    favicon_url = 'http://static344.dfiles.eu/images/favicon.ico'
     patterns = [
         hoster.Matcher('https?', ['*.dfiles.eu', '*.depositfiles.com'], '/(\w{1,3}/)?files/(?P<id>[\w\d]+)')
     ]

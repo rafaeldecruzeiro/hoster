@@ -21,6 +21,7 @@ import requests
 
 from ... import hoster
 
+
 @hoster.host
 class this:
     model = hoster.HttpPremiumHoster
@@ -39,6 +40,7 @@ class this:
     max_download_speed_free = 50
     waiting_time_free = 1
 
+
 def on_check(file):
     id = file.pmatch.id
     try:
@@ -52,7 +54,8 @@ def on_check(file):
         file.set_infos(name=fields[2], size=int(fields[3]), hash_type='md5', hash_value=fields[4].strip().lower())
     except requests.HTTPError:
         raise
-        
+
+
 def api(account, **kwargs):
     payload = {
         "username": account.username,
@@ -60,10 +63,12 @@ def api(account, **kwargs):
     }
     payload.update(kwargs)
     return account.get("https://api.share-online.biz/account.php", params=payload)
-    
+
+
 def parse(resp):
     return dict(re.split(r"=|:\ ?", i, 1) for i in resp.content.splitlines() if i.strip())
-    
+
+
 def start_download(chunk, url, f=True):
     resp = chunk.account.get(url, stream=True, chunk=chunk, allow_redirects=False)
     if "Location" in resp.headers:
@@ -74,7 +79,8 @@ def start_download(chunk, url, f=True):
             chunk.file.fatal("Error:", error)
     else:
         return resp
-        
+
+
 def on_download_premium(chunk):
     resp = api(chunk.account, act="download", lid=chunk.pmatch.id)
     try:
@@ -95,6 +101,7 @@ def on_download_premium(chunk):
                 chunk.no_download_link(seconds=180)
         return resp
 
+
 def on_download_free(chunk):
     resp = chunk.account.get(chunk.file.url)
     chunk.wait(3)
@@ -108,7 +115,7 @@ def on_download_free(chunk):
                     
         if err in ('freelimit', 'size', 'proxy'):
             chunk.file.fatal(msg or "Premium account needed")
-        if err in ('invalid'):                      
+        if err in ('invalid'):
             chunk.file.fatal(msg or "File not available")
         elif err in ('server'):
             chunk.file.retry('server', 600)
@@ -121,9 +128,9 @@ def on_download_free(chunk):
     wait = m and int(m.group(1)) or 30
     t = time.time()
     for result, challenge in chunk.solve_captcha('recaptcha', challenge_id='6LdatrsSAAAAAHZrB70txiV5p-8Iv8BtVxlTtjKX', retries=5):
-        data = {"dl_free": 1, 
-            "recaptcha_challenge_field": challenge, 
-            "recaptcha_response_field": result}
+        data = {"dl_free": 1,
+                "recaptcha_challenge_field": challenge,
+                "recaptcha_response_field": result}
         if time.time() - t < wait:
             chunk.wait(wait - (time.time() - t))
         resp = chunk.account.post("{}/free/captcha/{}".format(chunk.file.url, int(time.time()*1000)), data=data)
@@ -136,6 +143,7 @@ def on_download_free(chunk):
         chunk.no_download_link()
     chunk.wait(31)
     return start_download(chunk, url, True)
+
 
 def on_initialize_account(account):
     account.set_user_agent()
@@ -171,5 +179,3 @@ def on_initialize_account(account):
         else:
             if expire > time.time():
                 account.expires = expire
-            else:
-                print "expire in future??"
