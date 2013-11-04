@@ -49,7 +49,7 @@ def get_download_url(ctx, resp):
     try:
         url = resp.soup.find('a', href=lambda e: e.startswith('http://play.flashx.tv/player/fxtv.php?')).get('href')
     except AttributeError:
-        form = resp.soup.find('form', action='view.php')
+        form = resp.soup.find('form', action=lambda a: a == 'view.php' or a == 'show.php')
         action, data = hoster.serialize_html_form(form)
         resp = resp.post(action, data=data)
     else:
@@ -57,7 +57,7 @@ def get_download_url(ctx, resp):
     check_errors(ctx, resp)
 
     #ctx.account.get('http://play.flashx.tv/player/soy.php', referer=resp.url)
-    m = re.search('"(http.*?config=(http://play.flashx.tv/nuevo/player/(config)?fx(ng|config)?.php\?str=[^"]+))', resp.content)
+    m = re.search('"(http.*?config=(http://play.flashx.tv/nuevo/player/[^/\?]+.php\?str=[^"]+))', resp.content)
     url = m.group(1)
     config_url = m.group(2)
     resp = resp.get(url)
