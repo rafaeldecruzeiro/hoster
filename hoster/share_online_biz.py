@@ -51,7 +51,7 @@ def on_check(file):
         fields = resp.content.splitlines()[0].split(';')
         if fields[1] != 'OK':
             file.set_offline(fields[1])
-        file.set_infos(name=fields[2], size=int(fields[3]), hash_type='md5', hash_value=fields[4].strip().lower())
+        file.set_infos(name=fields[2], size=int(fields[3]))  # ,  hash_type='md5', hash_value=fields[4].strip().lower())
     except requests.HTTPError:
         raise
 
